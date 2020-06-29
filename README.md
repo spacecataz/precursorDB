@@ -8,3 +8,4 @@ Directories  | Description
 ------------- | ----------------
 docs  | Documentation, progress reports, etc.
 src   | Source code for python scripts, etc.
+data  | Data relevant to the study, e.g., simulation results, observations.
