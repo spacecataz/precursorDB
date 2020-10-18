@@ -26,14 +26,14 @@ def midpointYZ(f, y_start, y_end, y_n, z_start, z_end, z_n):
         The ending y position of the current sheet to integrate over.
     y_n : int
         The n value for the y axis; the number of intervals the range
-            of y values should be divided into.
+        of y values should be divided into.
     z_start : float
         The starting z position of the current sheet to integrate over.
     z_end : float
         The ending z position of the current sheet to integrate over.
     z_n : int
         The n value for the z axis; the number of intervals the range
-            of z values should be divided into.
+        of z values should be divided into.
 
     Returns
     -------
@@ -224,9 +224,9 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
     IMFu : float
         Upstream IMF (Sun side of current sheet).
     Vsw : float
-        Solar wind velocity.
+        Solar wind velocity (km/s).
     dT : int, optional
-        Time between integrations. The default is 10.
+        Time between integrations (s). The default is 10.
 
     Returns
     -------
@@ -236,14 +236,26 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
     # Get our current sheet strength using values from simulation:
     Ky = calc_K(IMFd, IMFu)  # (-5, 127)
     Kz = 0
-    print(Ky)
+    print(f"Ky = {Ky:0.4f}")
 
     # Set distance from Earth:
     R = 20 * Re  # 20 RE from Earth
 
     # Integrate!
-    by, bz = biot_savart(R, Ky, Kz)
-    print(by, bz)
+    # by, bz = biot_savart(R, Ky, Kz)
+    # print(by, bz)
+
+    dX = Vsw * 1000 * dT
+    x_position = R
+    t_elapsed = 0
+    timeseries = []
+    while x_position > 15:
+        print(f"X: {x_position:12.1f} | T: {t_elapsed:5.1f} | ", end="")
+        by, bz = biot_savart(x_position, Ky, Kz)
+        print(f"By: {by:0.2e} | Bz: {bz:0.2e}")
+        timeseries.append((t_elapsed, by, bz))
+        t_elapsed += dT
+        x_position -= dX
 
     # To get time series, loop over an array of R-values:
     # x_all = np.arange(150, 15, -1)
@@ -256,5 +268,5 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
 if __name__ == '__main__':
     # This is the default action if you run this code
     # test_midpointYZ()
-    test_biot_savart()
-    # gmp_timeseries(-5, 127, 0)
+    # test_biot_savart()
+    gmp_timeseries(-5, 127, 2700)
