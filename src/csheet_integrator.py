@@ -210,7 +210,7 @@ def calc_K(b1, b2):
 
     """
     # Does this match our calculations?
-    return 1E-9*(np.abs(b1-b2))/mu0
+    return 1E-9*(np.abs(b1)+np.abs(b2))/mu0
 
 
 def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
@@ -249,7 +249,7 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
     x_position = R
     t_elapsed = 0
     timeseries = []
-    while x_position > 15:
+    while x_position > 10 * Re:
         print(f"X: {x_position:12.1f} | T: {t_elapsed:5.1f} | ", end="")
         by, bz = biot_savart(x_position, Ky, Kz)
         print(f"By: {by:0.2e} | Bz: {bz:0.2e}")
