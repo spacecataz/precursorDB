@@ -239,7 +239,7 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
     print(f"Ky = {Ky:0.4f}")
 
     # Set distance from Earth:
-    R = 20 * Re  # 20 RE from Earth
+    R = 32 * Re  # 20 RE from Earth
 
     # Integrate!
     # by, bz = biot_savart(R, Ky, Kz)
@@ -250,12 +250,18 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
     t_elapsed = 0
     timeseries = []
     while x_position > 10 * Re:
-        print(f"X: {x_position:12.1f} | T: {t_elapsed:5.1f} | ", end="")
+        print(f"X: {x_position/Re:12.4f}RE | T: {t_elapsed:5.1f}s | ", end="")
         by, bz = biot_savart(x_position, Ky, Kz)
-        print(f"By: {by:0.2e} | Bz: {bz:0.2e}")
+        # Convert to nanotesla:
+        by *= 1e9
+        bz *= 1e9
+        print(f"By: {by:0.2e}nT | Bz: {bz:0.2e}nT")
         timeseries.append((t_elapsed, by, bz))
         t_elapsed += dT
         x_position -= dX
+
+    # Return to caller
+    return np.array(timeseries)
 
     # To get time series, loop over an array of R-values:
     # x_all = np.arange(150, 15, -1)
