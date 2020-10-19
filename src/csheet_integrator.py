@@ -210,7 +210,7 @@ def calc_K(b1, b2):
 
     """
     # Does this match our calculations?
-    return 1E-9*(b1-b2)/mu0
+    return 1E-9*(np.abs(b1-b2))/mu0
 
 
 def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
