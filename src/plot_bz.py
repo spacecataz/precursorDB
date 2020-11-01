@@ -35,6 +35,6 @@ offset = int
 
 #returns plot of data 
 plt.ion()
-plt.plot(mags['time'], mags[stations[iStation]]['bz'])
+plt.plot(mags['time'], mags[stations[iStation]]['bx'])
 #plt.plot(timeseries - offset, bz)
 
