@@ -42,7 +42,7 @@ def midpointYZ(f, y_start, y_end, y_n, z_start, z_end, z_n):
 
     """
     # Function for the DeltaX components of the midpoint rule
-    def delta(a, b, n): return (b - a) / float(n)
+    def delta(a, b, n): return (b - a) / n
 
     # Get the DeltaY and DeltaZ values
     del_y = delta(y_start, y_end, y_n)
@@ -50,13 +50,13 @@ def midpointYZ(f, y_start, y_end, y_n, z_start, z_end, z_n):
 
     result = 0
     # Iterate over the range of all intervals in the y-axis
-    for dy in range(y_n):
+    for i in range(y_n):
         # Calculate the position of the y-midpoint for this interval
-        y_position = y_start + (del_y/float(2)) + (del_y * dy)
+        y_position = y_start + (del_y/2) + (del_y * i)
         # Iterate over intervals in the z-axis for each y-axis interval
-        for dz in range(z_n):
+        for j in range(z_n):
             # Calculate the position of the z-midpoint for this interval
-            z_position = z_start + (del_z/float(2)) + (del_z * dz)
+            z_position = z_start + (del_z/2) + (del_z * j)
             # Add the calculated value for the summation at this y-z interval
             result += (del_y * del_z) * f(y_position, z_position)
     return result
@@ -134,7 +134,7 @@ def biot_savart(R, ky, kz, width=128, dX=0.1):
     Parameters
     ----------
     R : float
-        Distance from the Earth to the center of current sheet (r-x).
+        Distance from the Earth to the center of current sheet (r-x, meters).
     ky : float
         Current sheet strength in the GSM Y-direction (amps/m).
     kz : float
@@ -152,6 +152,11 @@ def biot_savart(R, ky, kz, width=128, dX=0.1):
         Perturbation measured by ground at center of Earth in GSM Z-direction.
 
     """
+
+    # Change units of width and dX from RE to meters:
+    dX    *= Re
+    width *= Re
+    
     # Get number of steps required to finish integral:
     nx = int(width/dX)
 
@@ -162,6 +167,10 @@ def biot_savart(R, ky, kz, width=128, dX=0.1):
     by = 0  # Hey fix this in the future.
     bz = midpointYZ(kern_z, -width/2, width/2, nx, -width/2, width/2, nx)
 
+    # Convert units to Tesla from Amps:
+    by *= mu0/(4*np.pi)
+    bz *= mu0/(4*np.pi)
+    
     return(by, bz)
 
 
@@ -210,8 +219,12 @@ def calc_K(b1, b2):
 
     """
     # Does this match our calculations?
-    return 1E-9*(np.abs(b1)+np.abs(b2))/mu0
+    #return 1E-9*(np.abs(b1)+np.abs(b2))/mu0
 
+    # The calculation here takes into account the direction such that
+    # dL around our amperian loop is in the positive Z direction on the
+    # b1 side.
+    return 1E-9 * (b1 - b2) /mu0 #Units: A/m
 
 def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
     """
@@ -257,7 +270,7 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
         bz *= 1e9
         print(f"By: {by:0.2e}nT | Bz: {bz:0.2e}nT")
         timeseries.append((t_elapsed, by, bz))
-        t_elapsed += dT
+        t_elapsed  += dT
         x_position -= dX
 
     # Return to caller
