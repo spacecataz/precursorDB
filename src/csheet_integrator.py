@@ -121,13 +121,20 @@ def gen_kernel(R, ky, kz):
         GSM Z-coordinate along the current sheet where we are integrating.
 
     """
+    
     rhat_x = 1  # should this actually be a normalized value?
 
     def y_kernel(y, z):
-        return kz * rhat_x / (R**2 + y**2 + z**2)
+        r_total = np.sqrt(R**2 + y**2 + z**2)
+        rhat_x  = R/r_total
+        
+        return kz * rhat_x / r_total**2
 
     def z_kernel(y, z):
-        return -ky * rhat_x / (R**2 + y**2 + z**2)
+        r_total = np.sqrt(R**2 + y**2 + z**2)
+        rhat_x  = R/r_total
+        
+        return -ky * rhat_x / r_total**2
 
     return y_kernel, z_kernel
 
@@ -266,7 +273,7 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
         by, bz = biot_savart(x_position, Ky, Kz)
         print(line + f"By: {by:0.2e}nT | Bz: {bz:0.2e}nT")
         timeseries.append((t_elapsed, by, bz))
-        t_elapsed += dT
+        t_elapsed  += dT
         x_position -= dX
 
     return np.array(timeseries)
@@ -274,4 +281,4 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
 
 if __name__ == '__main__':
     # This is the default action if you run this code
-    gmp_timeseries(-5, 127, 2700)
+    timeseries = gmp_timeseries(-5, 127, 2700)
