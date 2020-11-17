@@ -121,19 +121,14 @@ def gen_kernel(R, ky, kz):
         GSM Z-coordinate along the current sheet where we are integrating.
 
     """
-    
-    rhat_x = 1  # should this actually be a normalized value?
-
     def y_kernel(y, z):
         r_total = np.sqrt(R**2 + y**2 + z**2)
-        rhat_x  = R/r_total
-        
+        rhat_x = -R/r_total
         return kz * rhat_x / r_total**2
 
     def z_kernel(y, z):
         r_total = np.sqrt(R**2 + y**2 + z**2)
-        rhat_x  = R/r_total
-        
+        rhat_x = -R/r_total
         return -ky * rhat_x / r_total**2
 
     return y_kernel, z_kernel
@@ -210,15 +205,15 @@ def test_biot_savart(tol=1E-5):
           .format('biot_savart', result, expected, success))
 
 
-def calc_K(b1, b2):
+def calc_K(IMFd, IMFu):
     """
     Calculate K of the current sheet from magnetic fields on either side.
 
     Parameters
     ----------
-    b1 : float
+    IMFd : float
         Downstream magnetic field in nanotesla (closer to the Earth).
-    b2 : float
+    IMFu : float
         Upstream magnetic field in nanotesla (further from the Earth).
 
     Returns
@@ -232,7 +227,7 @@ def calc_K(b1, b2):
         our amperian loop is in the positive Z direction on the b1 side.
 
     """
-    return 1E-9 * (b1 - b2) / mu0  # Units: A/m
+    return 1E-9 * (IMFd*(1) + IMFu*(-1)) / mu0  # Units: A/m
 
 
 def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
@@ -273,7 +268,7 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10):
         by, bz = biot_savart(x_position, Ky, Kz)
         print(line + f"By: {by:0.2e}nT | Bz: {bz:0.2e}nT")
         timeseries.append((t_elapsed, by, bz))
-        t_elapsed  += dT
+        t_elapsed += dT
         x_position -= dX
 
     return np.array(timeseries)
