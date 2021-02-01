@@ -231,7 +231,7 @@ def calc_K(IMFd, IMFu):
     return 1E-9 * (IMFd*(1) + IMFu*(-1)) / mu0  # Units: A/m
 
 
-def gmp_timeseries(IMFd, IMFu, Vsw, dT=10, r0=100):
+def gmp_timeseries(IMFd, IMFu, Vsw, dT=10, r0=100, w_csheet=128, midpoint_dX=0.1):
     """
     Solve for time series of ground magnetic perturbation due to current sheet.
 
@@ -247,6 +247,10 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10, r0=100):
         Time between integrations (s). The default is 10.
     r0 : int, optional
         Initial X position of the current sheet (RE). The default is 100.
+    w_csheet : float, optional
+        Width of current sheet in Y and Z directions (Re). The default is 128.
+    midpoint_dX : float, optional
+        Size of spatial step for integration (Re). The default is 0.1.
 
     Returns
     -------
@@ -268,7 +272,7 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10, r0=100):
     timeseries = []
     while x_position > 10 * Re:
         line = f"X: {x_position/Re:12.4f}RE | T: {t_elapsed:5.1f}s | "
-        by, bz = biot_savart(x_position, Ky, Kz)
+        by, bz = biot_savart(x_position, Ky, Kz, w_csheet, midpoint_dX)
         print(line + f"By: {by:0.2e}nT | Bz: {bz:0.2e}nT")
         timeseries.append((t_elapsed, by, bz))
         t_elapsed += dT
