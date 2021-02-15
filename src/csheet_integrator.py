@@ -169,7 +169,7 @@ def biot_savart(R, ky, kz, width=128, dX=0.1):
     kern_y, kern_z = gen_kernel(R, ky, kz)
 
     # Integrate to solve for by, bz.  Units: Amps
-    by = 0
+    by = midpointYZ(kern_y, -halfw, halfw, nx, -halfw, halfw, nx)
     bz = midpointYZ(kern_z, -halfw, halfw, nx, -halfw, halfw, nx)
 
     # Convert to nanotesla from Amps.  4piE-7/4pi = 1E-7 => 1E-7 * 1E9 = 1E2
@@ -270,7 +270,7 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=10, r0=100, w_csheet=128, midpoint_dX=0.1
     x_position = R
     t_elapsed = 0
     timeseries = []
-    while x_position > 10 * Re:
+    while x_position + dX > 10 * Re:
         line = f"X: {x_position/Re:12.4f}RE | T: {t_elapsed:5.1f}s | "
         by, bz = biot_savart(x_position, Ky, Kz, w_csheet, midpoint_dX)
         print(line + f"By: {by:0.2e}nT | Bz: {bz:0.2e}nT")

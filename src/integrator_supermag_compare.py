@@ -49,7 +49,7 @@ IMF_u = float(data['Bz,final (nT)'][iFile])
 V_sw = float(data['Usw (km/s)'][iFile]) 
 
 #run integrator
-timeseries = gmp_timeseries(IMF_d, IMF_u, V_sw)
+timeseries = gmp_timeseries(IMF_d, IMF_u, V_sw, dT=60)
 
 i = 0	#counter variable
 
