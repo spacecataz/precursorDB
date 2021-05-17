@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 #lists and arrays necessary for the script to function
+bn_array = np.zeros(900)	#list of values from supermag data
+bn2_array = np.zeros(900)	#list of values from integrator
 by_array = np.zeros(900)	#list of by values from supermag data
 by2_array = np.zeros(900)	#list of by values from integrator
 bz_array = np.zeros(900)	#list of bz values from supermag data
@@ -16,6 +18,7 @@ bz2_array = np.zeros(900)	#list of bz values from integrator
 seconds = list(range(900))	#list of minutes (mislabeled variable) 
 by_near_event = []		#hour of activity leading up to the event
 bz_near_event = []		#hour of activity leading up to the event
+bn_near_event = []		#hour of activity leading up to event
 diff = []			#change in by between consecutive readings in supermag data
 t0 = 0				#the point at which the current sheet arrives at the Earth
 
@@ -178,6 +181,13 @@ i = 0	#reset counter variable
 for num, item in enumerate(magcoords):
 	bz2_array[i] = magcoords[num][2]
 	i += 1
+	
+i = 0	#reset counter variable
+
+#compile integrator results at 60 second resolution into array of standard length (900 items) for plotting
+for num, item in enumerate(magcoords):
+	bn2_array[i] = magcoords[num][0]
+	i += 1
 
 #compile supermag data into array of standard length (900 items) for plotting
 for num, item in enumerate(mags[dayside[iStation]]['by']):
@@ -185,6 +195,9 @@ for num, item in enumerate(mags[dayside[iStation]]['by']):
 
 for num, item in enumerate(mags[dayside[iStation]]['bz']):
 	bz_array[num] = item
+	
+for num, item in enumerate(mags[dayside[iStation]]['bx']):
+	bn_array[num] = item
 	
 #find largest gap between consecutive readings
 i = 280	#set counter variable to an appropriate range
@@ -214,6 +227,12 @@ i = 60	#reset counter variable
 while i >= 0:
 	bz_near_event.append(bz_array[t0 - i])
 	i -= 1
+	
+i = 60	#reset counter variable
+
+while i >= 0:
+	bn_near_event.append(bn_array[t0 - i])
+	i -= 1
 
 #use the average bz leading up to the event to determine how high or low the integrator results should be plotted with respect to the supermag data
 by_avg = np.average(by_near_event)
@@ -222,20 +241,30 @@ offset_y = [by_avg] * 900
 bz_avg = np.average(bz_near_event)
 offset_z = [bz_avg] * 900
 
+bn_avg = np.average(bn_near_event)
+offset_n = [bn_avg] * 900
+
 #plot supermag data vs integrator results
-plt.subplot(1, 2, 1)
+plt.subplot(1, 3, 1)
 integrator_result, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(by2_array, offset_y)])
 magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], by_array)
 plt.legend(handles = [integrator_result, magdata], labels = ['Biot Savart Integrator Result','SuperMAG Data'])
-plt.title('By')
-plt.ylabel(r'$B_y \ (nT)$')
+plt.title('E')
+plt.ylabel(r'$B \ (nT)$')
 plt.xlabel('time (minutes)')
 
-plt.subplot(1, 2, 2)
+plt.subplot(1, 3, 2)
 integrator_result2, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(bz2_array, offset_z)])
 magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], bz_array)
 plt.legend(handles = [integrator_result2, magdata], labels = ['Biot Savart Integrator Result','SuperMAG Data'])
-plt.title('Bz')
-plt.ylabel(r'$B_z \ (nT)$')
+plt.title('Z')
+plt.ylabel(r'$B \ (nT)$')
 plt.xlabel('time (minutes)')
 
+plt.subplot(1, 3, 3)
+integrator_result, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(bn2_array, offset_n)])
+magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], bn_array)
+plt.legend(handles = [integrator_result, magdata], labels = ['Biot Savart Integrator Result','SuperMAG Data'])
+plt.title('N')
+plt.ylabel(r'$B \ (nT)$')
+plt.xlabel('time (minutes)')
