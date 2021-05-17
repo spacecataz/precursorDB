@@ -44,43 +44,13 @@ data = pd.read_excel('/home/richard/Desktop/research/precursorDB/docs/SSC_events
 #compile a list of stations which were active at the time of the event chosen above
 stations = list(mags.keys())[1:]
 
-#determine the time of the event (GMT)
-start_time = mags['time'][0]
-GMT = start_time + timedelta(hours = 5)
-
-#read longitude of stations
-stat_info = supermag.read_statinfo()
-counter = 0
-longitudes = []
-while counter < len(stations):
-	longitudes.append(stat_info[stations[counter]]['geolon'])
-	counter += 1
-
-#for each magnetometer in stations list, determine the time of the event at the station
-counter = 0
-mg_time = []
-while counter < len(stations):
-	mg_time.append(GMT + timedelta(hours = (longitudes[counter] / 360) * 24))
-	counter += 1
-
-#creates a dictionary that maps magnetometers to their respective times
-mag_time_dict = dict(zip(stations, mg_time))
-
-#checks which magnetometers are on the dayside and lists them
-counter = 0
-dayside = []
-while counter < len(stations):
-	if 9 <= mg_time[counter].hour < 15:
-		dayside.append(stations[counter])
-	counter += 1
-else:
-	for j, g in enumerate(dayside):
+for j, g in enumerate(stations):
 		print(f"#{j}\t{g}") 
 
 #prompt the user to give which station to take data from
 iStation = int(input("What station do you choose?"))
 iStation
-dayside[iStation]
+stations[iStation]
 
 #open file
 f = open(files[iFile], 'r')
@@ -90,7 +60,7 @@ j = 0	#reset counter variable
 #find and isolate magnetic latitude and longitude
 while j < 2:	#skip the first time the magnetometers are listed (in the header)
 	line = f.readline()
-	if dayside[iStation] in line:
+	if stations[iStation] in line:
 		j += 1
 
 maglon = float(line.split()[3])
@@ -105,7 +75,7 @@ Vsw = float(data['Usw (km/s)'][iFile])
 onset = datetime.combine(data['Date'][iFile], data['Time'][iFile])
 
 #generate timeseries
-timeseries = gmp_timeseries(IMFdz, IMFuz, IMFdy, IMFuy, Vsw , r0 = 100)
+timeseries = gmp_timeseries(IMFdz, IMFuz, IMFdy, IMFuy, Vsw , r0 = 100, w_csheet=128)
 
 #determine the integrator start time
 integrator_time  = timedelta(seconds = (len(timeseries[:,0]) - 1) * 60)
@@ -121,7 +91,7 @@ location = []#location of magnetometer
 
 #make a location list as long as timelist
 while i < len(timeseries[:,0]):
-	location.append([1.0, mags[str(dayside[iStation])]['geolat'], mags[str(dayside[iStation])]['geolon']])
+	location.append([1.0, mags[str(stations[iStation])]['geolat'], mags[str(stations[iStation])]['geolon']])
 	i +=1
 
 i = 0		#reset counter variable
@@ -190,20 +160,20 @@ for num, item in enumerate(magcoords):
 	i += 1
 
 #compile supermag data into array of standard length (900 items) for plotting
-for num, item in enumerate(mags[dayside[iStation]]['by']):
+for num, item in enumerate(mags[stations[iStation]]['by']):
 	by_array[num] = item
 
-for num, item in enumerate(mags[dayside[iStation]]['bz']):
+for num, item in enumerate(mags[stations[iStation]]['bz']):
 	bz_array[num] = item
 	
-for num, item in enumerate(mags[dayside[iStation]]['bx']):
+for num, item in enumerate(mags[stations[iStation]]['bx']):
 	bn_array[num] = item
 	
 #find largest gap between consecutive readings
 i = 280	#set counter variable to an appropriate range
 
 while i < 320:
-	diff.append((-mags[dayside[iStation]]['by'][i+2] + 8*mags[dayside[iStation]]['by'][i+1] - 8*mags[dayside[iStation]]['by'][i-1] + mags[dayside[iStation]]['by'][i-2])/12)
+	diff.append((-mags[stations[iStation]]['by'][i+2] + 8*mags[stations[iStation]]['by'][i+1] - 8*mags[stations[iStation]]['by'][i-1] + mags[stations[iStation]]['by'][i-2])/12)
 	i+=1
 
 #find the point at which the largest jump in bz occurs and assume this is the point at which the event occurs
@@ -246,6 +216,14 @@ offset_n = [bn_avg] * 900
 
 #plot supermag data vs integrator results
 plt.subplot(1, 3, 1)
+integrator_result, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(bn2_array, offset_n)])
+magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], bn_array)
+plt.legend(handles = [integrator_result, magdata], labels = ['Biot Savart Integrator Result','SuperMAG Data'])
+plt.title('N')
+plt.ylabel(r'$B \ (nT)$')
+plt.xlabel('time (minutes)')
+
+plt.subplot(1, 3, 2)
 integrator_result, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(by2_array, offset_y)])
 magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], by_array)
 plt.legend(handles = [integrator_result, magdata], labels = ['Biot Savart Integrator Result','SuperMAG Data'])
@@ -253,18 +231,10 @@ plt.title('E')
 plt.ylabel(r'$B \ (nT)$')
 plt.xlabel('time (minutes)')
 
-plt.subplot(1, 3, 2)
+plt.subplot(1, 3, 3)
 integrator_result2, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(bz2_array, offset_z)])
 magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], bz_array)
 plt.legend(handles = [integrator_result2, magdata], labels = ['Biot Savart Integrator Result','SuperMAG Data'])
 plt.title('Z')
-plt.ylabel(r'$B \ (nT)$')
-plt.xlabel('time (minutes)')
-
-plt.subplot(1, 3, 3)
-integrator_result, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(bn2_array, offset_n)])
-magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], bn_array)
-plt.legend(handles = [integrator_result, magdata], labels = ['Biot Savart Integrator Result','SuperMAG Data'])
-plt.title('N')
 plt.ylabel(r'$B \ (nT)$')
 plt.xlabel('time (minutes)')
