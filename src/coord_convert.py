@@ -57,8 +57,16 @@ f = open(files[iFile], 'r')
 
 j = 0	#reset counter variable
 
+#skip header
+while j < 2:
+	skip = f.readline()
+	if str('***') in skip:
+		j +=1
+
+j = 0	#reset counter variable
+
 #find and isolate magnetic latitude and longitude
-while j < 2:	#skip the first time the magnetometers are listed (in the header)
+while j < 2:	#skip the first time the magnetometers are listed
 	line = f.readline()
 	if stations[iStation] in line:
 		j += 1
@@ -72,10 +80,18 @@ IMFuz = float(data['Bz,final (nT)'][iFile])
 IMFdy = float(data['By,init (nT)'][iFile])
 IMFuy = float(data['By,final (nT)'][iFile]) 
 Vsw = float(data['Usw (km/s)'][iFile]) 
-onset = datetime.combine(data['Date'][iFile], data['Time'][iFile])
+#onset = datetime.combine(data['Date'][iFile], data['Time'][iFile])
+t_P = datetime.combine(data['Date'][iFile], data['t,P'][iFile])			#time of pressure increase
+t_H = datetime.combine(data['Date'][iFile], data['t,SYM-H'][iFile])		#time of SYM-H increase
+t_CS = datetime.combine(data['Date'][iFile], data['t,CS'][iFile])		#time of current sheet arrival
+
+#account for error in arrival time
+delta_t = t_P - t_H					#difference between pressure increase and SYM-H increase
+onset = t_CS + delta_t					#corrected current sheet arrival time
+t0 = [i for i, time in enumerate(mags['time']) if mags['time'][i] == onset]	#time used for plotting
 
 #generate timeseries
-timeseries = gmp_timeseries(IMFdz, IMFuz, IMFdy, IMFuy, Vsw , r0 = 100, w_csheet=128)
+timeseries = gmp_timeseries(IMFdz, IMFuz, IMFdy, IMFuy, Vsw , r0 = 100, w_csheet=16)
 
 #determine the integrator start time
 integrator_time  = timedelta(seconds = (len(timeseries[:,0]) - 1) * 60)
@@ -169,6 +185,7 @@ for num, item in enumerate(mags[stations[iStation]]['bz']):
 for num, item in enumerate(mags[stations[iStation]]['bx']):
 	bn_array[num] = item
 	
+'''	
 #find largest gap between consecutive readings
 i = 280	#set counter variable to an appropriate range
 
@@ -180,28 +197,29 @@ while i < 320:
 for j, h in enumerate(diff):
 	if h == max(diff):
 		t0 = j + 280
+'''
 
 #set the integrator and supermag plots so that t = 0 occurs at the point where the current sheet arrives at the Earth
-offset_x = [t0] * 900
+offset_x = [t0[0]] * 900
 offset_x2 = [len(timeseries)] * 900
 
 #find average by and bz at time of event
 i = 60	#repurpose counter variable
 
 while i >= 0:
-	by_near_event.append(by_array[t0 - i])
+	by_near_event.append(by_array[t0[0] - i])
 	i -= 1
 
 i = 60	#reset counter variable
 
 while i >= 0:
-	bz_near_event.append(bz_array[t0 - i])
+	bz_near_event.append(bz_array[t0[0] - i])
 	i -= 1
 	
 i = 60	#reset counter variable
 
 while i >= 0:
-	bn_near_event.append(bn_array[t0 - i])
+	bn_near_event.append(bn_array[t0[0] - i])
 	i -= 1
 
 #use the average bz leading up to the event to determine how high or low the integrator results should be plotted with respect to the supermag data
@@ -213,8 +231,11 @@ offset_z = [bz_avg] * 900
 
 bn_avg = np.average(bn_near_event)
 offset_n = [bn_avg] * 900
-
+#% timelist[0].month % timelist[0].day % 'station: ' % stations[iStation]
 #plot supermag data vs integrator results
+fig = plt.figure()
+fig.suptitle('Date: {} {} {} Station: {} Geo. Lat: {} Mag. Lat: {}'.format(timelist[0].year, timelist[0].month, timelist[0].day, stations[iStation], mags[stations[iStation]]['geolat'], maglat))
+
 plt.subplot(1, 3, 1)
 integrator_result, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(bn2_array, offset_n)])
 magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], bn_array)
@@ -226,7 +247,6 @@ plt.xlabel('time (minutes)')
 plt.subplot(1, 3, 2)
 integrator_result, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(by2_array, offset_y)])
 magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], by_array)
-plt.legend(handles = [integrator_result, magdata], labels = ['Biot Savart Integrator Result','SuperMAG Data'])
 plt.title('E')
 plt.ylabel(r'$B \ (nT)$')
 plt.xlabel('time (minutes)')
@@ -234,7 +254,6 @@ plt.xlabel('time (minutes)')
 plt.subplot(1, 3, 3)
 integrator_result2, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(bz2_array, offset_z)])
 magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], bz_array)
-plt.legend(handles = [integrator_result2, magdata], labels = ['Biot Savart Integrator Result','SuperMAG Data'])
 plt.title('Z')
 plt.ylabel(r'$B \ (nT)$')
 plt.xlabel('time (minutes)')
