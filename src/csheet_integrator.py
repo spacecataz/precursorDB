@@ -265,16 +265,16 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=60, r0=100, w_csheet=128, dI=1.0):
 
     Returns
     -------
-    numpy.array
-        json object
-            Input values used to generate this timeseries
-        series of tuples
-            t_elapsed, By, and Bz.  Units: s, nT, nT
+    list
+        0: dict
+            Dictionary object of the inputs used to generate the timeseries
+        1: numpy.array
+            Timeseries of t_elapsed, By, and Bz.  Units: s, nT, nT.
 
     """
-    timeseries = [{'IMFd': IMFd, 'IMFu': IMFu,
-                   'Vsw': Vsw, 'dT': dT, 'r0': r0,
-                   'w_csheet': w_csheet, 'dI': dI}]
+    inputdata = {'IMFd': IMFd, 'IMFu': IMFu,
+                 'Vsw': Vsw, 'dT': dT, 'r0': r0,
+                 'w_csheet': w_csheet, 'dI': dI}
 
     listtypes = [list, np.ndarray]
 
@@ -286,7 +286,7 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=60, r0=100, w_csheet=128, dI=1.0):
                   'coordinates as input for \'IMFd\', \'IMFu\', and \'Vsw\' ' +
                   '(e.g. [x, y, z])')
         print(errstr)
-        return np.array(timeseries)
+        return [inputdata, np.array()]
 
     floattypes = [float, np.float32, np.float64]
     if type(IMFd) is not np.ndarray or type(IMFd[0]) not in floattypes:
@@ -308,17 +308,18 @@ def gmp_timeseries(IMFd, IMFu, Vsw, dT=60, r0=100, w_csheet=128, dI=1.0):
 
     x_position = R
     t_elapsed = 0
+    timeseries = []
 
     # Adjust x pos by -dX so we stop after the first integration below 10RE
     while (x_position > 5 * Re) and (x_position > (10 * Re) + dX):
         line = f"X: {x_position/Re:12.4f}RE | T: {t_elapsed:5.1f}s | "
         by, bz = biot_savart(x_position, Ky, Kz, w_csheet, dI)
         print(line + f"By: {by:0.2e}nT | Bz: {bz:0.2e}nT")
-        timeseries.append((t_elapsed, by, bz))
+        timeseries.append([t_elapsed, by, bz])
         t_elapsed += dT
         x_position += dX
 
-    return np.array(timeseries)
+    return [inputdata, np.array(timeseries)]
 
 
 def export_timeseries(ts, export_filepath="ts_export",
@@ -365,7 +366,7 @@ def export_timeseries(ts, export_filepath="ts_export",
 
     with open(export_filepath, 'w') as fp:
         fp.write(json.dumps(ts[0]) + "\n")
-        for row in ts[1:]:
+        for row in ts[1]:
             line = ""
             for value in row:
                 line += str(value) + ' '
@@ -383,8 +384,12 @@ def import_timeseries(import_filepath):
 
     Returns
     -------
-    numpy.array
-        Timeseries of t_elapsed, By, and Bz.  Units: s, nT, nT.
+    list
+        0: dict
+            Dictionary object of the inputs used to generate the timeseries
+        1: numpy.array
+            Timeseries of t_elapsed, By, and Bz.  Units: s, nT, nT.
+
         If import_filepath is not a valid file, returns None.
 
     """
@@ -393,17 +398,18 @@ def import_timeseries(import_filepath):
     if not import_filepath.endswith(".txt"):
         import_filepath += ".txt"
     if exists(import_filepath):
+        inputdata = None
         timeseries = []
         with open(import_filepath, 'r') as fp:
             for line in fp:
-                if len(timeseries) == 0:
-                    timeseries.append(json.loads(line))
+                if inputdata is None:
+                    inputdata = json.loads(line)
                     continue
                 attributes = line.split()
                 attr_map = map(float, attributes)
                 attr_list = list(attr_map)
                 timeseries.append(attr_list)
-        return np.array(timeseries)
+        return [inputdata, np.array(timeseries)]
     else:
         return None
 
@@ -413,8 +419,10 @@ if __name__ == '__main__':
     ts = gmp_timeseries(
         [0, 0, -5], [0, 0, 127], [-2700, 0, 0], dI=1.0)
 
-    # export_timeseries(ts, 'ts_json_test.txt')
-    # json_dict = import_timeseries('ts_json_test.txt')
+    export_timeseries(ts, 'ts_json_test.txt')
+    json_dict = import_timeseries('ts_json_test.txt')
+
+    breakpoint()
 
     # ts = gmp_timeseries(-5, 127, -2700, dI=1.0)
     # export_timeseries(ts, 'ts_json_test2.txt')

@@ -38,10 +38,10 @@ for num, item in enumerate(bz_list):
 	bz_array[num] = item
 
 #Run integrator for ideal event
-timeseries = gmp_timeseries(-5, 127, 2700, dT = 10)
+timeseries = gmp_timeseries([0, 0, -5], [0, 0, 127], [-2700, 0, 0], dT = 10)
 
 #Compile the results from the ideal event into a list of standard length (900 items) for plotting
-for num, item in enumerate(timeseries[:,2]):
+for num, item in enumerate(timeseries[1][:,2]):
 	bz2_array[num] = item
 
 #Plot integrator vs MHD results

@@ -15,7 +15,7 @@ diff = []			#change in bz between consecutive readings in supermag data
 t0 = 0				#the point at which the current sheet arrives at the Earth
 
 #compile a list of all the supermag data files
-files = glob('/home/richard/Desktop/github/precursorDB/data/supermag/*.txt')  
+files = glob('../data/supermag/*.txt')
 
 #print the supermag data files
 for i, f in enumerate(files):
@@ -41,22 +41,21 @@ iStation
 stations[iStation]
 
 #open events excel sheet
-data = pd.read_excel('/home/richard/Desktop/github/precursorDB/docs/SSC_events.xlsx')
-
+data = pd.read_excel('../docs/SSC_events.xlsx', engine='openpyxl')
 #retrieve satellite information from excel sheet for use in integrator
 IMF_d = float(data['Bz,init (nT)'][iFile])
 IMF_u = float(data['Bz,final (nT)'][iFile]) 
-V_sw = float(data['Usw (km/s)'][iFile]) 
+V_sw = float(data['Usw (km/s)'][iFile])
 
 #run integrator
-timeseries = gmp_timeseries(IMF_d, IMF_u, V_sw)
+timeseries = gmp_timeseries([0, 0, IMF_d], [0, 0, IMF_u], [-V_sw, 0, 0])
 
 i = 0	#counter variable
 
 #compile integrator results at 60 second resolution into array of standard length (900 items) for plotting
-for num, item in enumerate(timeseries[:,2]):
-	if timeseries[num][0] % 60 == 0:
-		bz2_array[i] = timeseries[num][2]
+for num, item in enumerate(timeseries[1][:,2]):
+	if timeseries[1][num][0] % 60 == 0:
+		bz2_array[i] = timeseries[1][num][2]
 		i += 1
 		
 j = 0	#counter variable
@@ -78,7 +77,7 @@ for j, h in enumerate(diff):
 
 #set the integrator and supermag plots so that t = 0 occurs at the point where the current sheet arrives at the Earth
 offset_x = [t0] * 900
-offset_x2 = [len(timeseries)] * 900
+offset_x2 = [len(timeseries[1])] * 900
 
 #find average bz at time of event
 i = 60	#repurpose counter variable
