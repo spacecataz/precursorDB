@@ -9,11 +9,11 @@ bz_list = []			#list of MHD values at 10 second intervals
 timelist = []			#list of datetime objects with the correct resolution
 bz_array = np.zeros(900)	#list of bz MHD values with a standard length
 bz2_array = np.zeros(900)	#list of bz integrator values with a standard length
-offset = [73.826] * 900		#difference in x-axis position between integrator and MHD results
+offset = [75] * 900		#difference in x-axis position between integrator and MHD results
 seconds = list(range(900))	#list of seconds for plotting
 
 #load pickle with MHD Result
-with open('dst.pkl', 'rb') as f:
+with open('precursorDB/src/dst.pkl', 'rb') as f:
 	data = pkl.load(f)
 
 #compile northward IMF data into a dictionary
@@ -38,7 +38,7 @@ for num, item in enumerate(bz_list):
 	bz_array[num] = item
 
 #Run integrator for ideal event
-timeseries = gmp_timeseries([0, 0, -5], [0, 0, 127], [-2700, 0, 0], dT = 10)
+timeseries = gmp_timeseries([0,0,-5], [0,0,127], [-2700,0,0], dT = 10, w_csheet = 256)
 
 #Compile the results from the ideal event into a list of standard length (900 items) for plotting
 for num, item in enumerate(timeseries[1][:,2]):
@@ -51,3 +51,4 @@ plt.legend(handles = [integrator_result, mhd_result], labels = ['Biot Savart Int
 plt.title('MHD vs. Integrator Results')
 plt.ylabel(r'$B_z \ (nT)$')
 plt.xlabel('time (min)')
+plt.show()

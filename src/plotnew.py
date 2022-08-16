@@ -1,16 +1,17 @@
 from glob import glob
 import matplotlib.pyplot as plt; plt.ion()
 import supermag
-import omni
+import precursorDB.src.omni as omni
 import numpy as np
 from csheet_integrator_altered import gmp_timeseries
+from spacepy.plot import style
 from spacepy.coordinates import Coords
 from spacepy.time import Ticktock
 from datetime import datetime, timedelta
 import pandas as pd
 
 #locates all txt files and compiles them into a list
-files = glob('/home/richard/Desktop/research/precursorDB/data/supermag/*.txt')   
+files = glob('precursorDB/data/supermag/*.txt')   
 
 #list files
 for i, f in enumerate(files):
@@ -26,7 +27,7 @@ mags = supermag.SuperMag(files[iFile])
 mags.keys()
 
 #open events excel sheet
-data = pd.read_excel('/home/richard/Desktop/research/precursorDB/docs/SSC_events.xlsx')
+data = pd.read_excel('precursorDB/docs/SSC_events.xlsx')
 
 #compile a list of stations which were active at the time of the event chosen above
 stations = list(mags.keys())[1:]
@@ -77,7 +78,7 @@ delta_t = t_P - t_H					#difference between pressure increase and SYM-H increase
 onset = t_CS - delta_t					#corrected current sheet arrival time
 
 #get omniweb data
-path = '/home/richard/Desktop/research/precursorDB/data/omni/'+str(data['Date'][iFile].year)+str(data['Date'][iFile].month)+str(data['Date'][iFile].day)+'.lst'
+path = 'precursorDB/data/omni/'+str(data['Date'][iFile].year)+str(data['Date'][iFile].month)+str(data['Date'][iFile].day)+'.lst'
 omni = omni.read_ascii(path)
 
 #generate timeseries
@@ -140,6 +141,7 @@ mg = np.array(magcoords)
 tl = np.array(timelist)
 
 #plot everything
+style()
 fig1 = plt.figure(1)
 fig1.suptitle('Date: {} {} {} Station: {} Geo. Lat: {} Mag. Lat: {}'.format(timelist[0].year, timelist[0].month, timelist[0].day, stations[iStation], mags[stations[iStation]]['geolat'], maglat))
 

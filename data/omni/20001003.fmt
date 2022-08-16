@@ -1,0 +1,12 @@
+  FORMAT OF THE SUBSETTED FILE
+    
+    ITEMS                      FORMAT   
+     
+ 1 Year                          I4        
+ 2 Day                           I4        
+ 3 Hour                          I3        
+ 4 Minute                        I3        
+ 5 BY, nT (GSM)                  F8.2      
+ 6 BZ, nT (GSM)                  F8.2      
+ 7 Flow pressure, nPa            F6.2      
+ 8 SYM/H, nT                     I6        

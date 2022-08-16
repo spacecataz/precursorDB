@@ -40,7 +40,7 @@ seconds = list(range(900))						#list of seconds for plotting
 j = 0									#counter variable
 
 #load pickle with MHD Result
-with open('dst.pkl', 'rb') as f:
+with open('precursorDB/src/dst.pkl', 'rb') as f:
 	data = pkl.load(f)
 
 #compile northward IMF data into a dictionary
@@ -86,62 +86,62 @@ bz_avg = np.average(bz_neutral)
 offset_y = [bz_avg] * 900
 
 #Run integrator for ideal event
-timeseries2 = gmp_timeseries(-5, 127, 2700, dT = 10, w_csheet = 2)
+timeseries2 = gmp_timeseries([0,0,-5], [0,0,127], [-2700,0,0], dT = 10, w_csheet = 2)
 
 #Compile the results from the ideal event into a list of standard length (900 items) for plotting
-for num, item in enumerate(timeseries2[:,2]):
+for num, item in enumerate(timeseries2[1][:,2]):
 	bz2_array[num] = item
 	
 #set the integrator and mhd plots so that t = 0 occurs at the point where the current sheet arrives at the Earth
 offset_x = [t0] * 900
-offset_x2 = [len(timeseries2)] * 900
+offset_x2 = [len(timeseries2)+21] * 900
 
 #Repeat previous steps for 4 RE current sheet
 #Run integrator for ideal event and put results into list
-timeseries4 = gmp_timeseries(-5, 127, 2700, dT = 10, w_csheet = 4)
-for num, item in enumerate(timeseries4[:,2]):
+timeseries4 = gmp_timeseries([0,0,-5], [0,0,127], [-2700,0,0], dT = 10, w_csheet = 4)
+for num, item in enumerate(timeseries4[1][:,2]):
 	bz4_array[num] = item
 	
 #Repeat previous steps for 8 RE current sheet
 #Run integrator for ideal event and put results into list
-timeseries8 = gmp_timeseries(-5, 127, 2700, dT = 10, w_csheet = 8)
-for num, item in enumerate(timeseries8[:,2]):
+timeseries8 = gmp_timeseries([0,0,-5], [0,0,127], [-2700,0,0], dT = 10, w_csheet = 8)
+for num, item in enumerate(timeseries8[1][:,2]):
 	bz8_array[num] = item
 	
 #Repeat previous steps for 16 RE current sheet
 #Run integrator for ideal event and put results into list
-timeseries16 = gmp_timeseries(-5, 127, 2700, dT = 10, w_csheet = 16)
-for num, item in enumerate(timeseries16[:,2]):
+timeseries16 = gmp_timeseries([0,0,-5], [0,0,127], [-2700,0,0], dT = 10, w_csheet = 16)
+for num, item in enumerate(timeseries16[1][:,2]):
 	bz16_array[num] = item
 
 #Repeat previous steps for 32 RE current sheet
 #Run integrator for ideal event and put results into list
-timeseries32 = gmp_timeseries(-5, 127, 2700, dT = 10, w_csheet = 32)
-for num, item in enumerate(timeseries32[:,2]):
+timeseries32 = gmp_timeseries([0,0,-5], [0,0,127], [-2700,0,0], dT = 10, w_csheet = 32)
+for num, item in enumerate(timeseries32[1][:,2]):
 	bz32_array[num] = item
 	
 #Repeat previous steps for 64 RE current sheet
 #Run integrator for ideal event and put results into list
-timeseries64 = gmp_timeseries(-5, 127, 2700, dT = 10, w_csheet = 64)
-for num, item in enumerate(timeseries64[:,2]):
+timeseries64 = gmp_timeseries([0,0,-5], [0,0,127], [-2700,0,0], dT = 10, w_csheet = 64)
+for num, item in enumerate(timeseries64[1][:,2]):
 	bz64_array[num] = item
 
 #Repeat previous steps for 128 RE current sheet
 #Run integrator for ideal event and put results into list
-timeseries128 = gmp_timeseries(-5, 127, 2700, dT = 10, w_csheet = 128)
-for num, item in enumerate(timeseries128[:,2]):
+timeseries128 = gmp_timeseries([0,0,-5], [0,0,127], [-2700,0,0], dT = 10, w_csheet = 128)
+for num, item in enumerate(timeseries128[1][:,2]):
 	bz128_array[num] = item
 
 #Repeat previous steps for 256 RE current sheet
 #Run integrator for ideal event and put results into list
-timeseries256 = gmp_timeseries(-5, 127, 2700, dT = 10, w_csheet = 256)
-for num, item in enumerate(timeseries256[:,2]):
+timeseries256 = gmp_timeseries([0,0,-5], [0,0,127], [-2700,0,0], dT = 10, w_csheet = 256)
+for num, item in enumerate(timeseries256[1][:,2]):
 	bz256_array[num] = item
 
 #Repeat previous steps for 512 RE current sheet
 #Run integrator for ideal event and put results into list
-timeseries512 = gmp_timeseries(-5, 127, 2700, dT = 10, w_csheet = 512)
-for num, item in enumerate(timeseries512[:,2]):
+timeseries512 = gmp_timeseries([0,0,-5], [0,0,127], [-2700,0,0], dT = 10, w_csheet = 512)
+for num, item in enumerate(timeseries512[1][:,2]):
 	bz512_array[num] = item
 	
 lines = [bz2_array, bz4_array, bz8_array, bz16_array, bz32_array, bz64_array, bz128_array, bz256_array, bz512_array]
@@ -150,10 +150,11 @@ for i, line in enumerate(lines):
 	# Line color.
         color = cMap.to_rgba(i)
         # Add curve:
-        ax.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(line, offset_y)], color=color, lw=2, label = str(2**(i+1))+' RE Current Sheet')
+        ax.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(line, offset_y)], color=color, lw=2, label = str(2**(i+1))+' RE')
 #Plot MHD results
-ax.plot([x-y for x,y in zip(seconds, offset_x)], bz_array, label = 'MHD Results')
+ax.plot([x-y for x,y in zip(seconds, offset_x)], bz_array, color='black', label = 'MHD Results')
 ax.legend()
 plt.title('MHD vs. Integrator Results')
 plt.ylabel(r'$B_z \ (nT)$')
-plt.xlabel('time (das)')
+plt.xlabel('time (s)')
+plt.show()

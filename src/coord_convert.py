@@ -2,8 +2,9 @@ from glob import glob
 import matplotlib.pyplot as plt; plt.ion()
 import supermag
 import numpy as np
-from csheet_integrator_altered import gmp_timeseries
+from csheet_integrator import gmp_timeseries
 from spacepy.coordinates import Coords
+from spacepy.plot import style
 from spacepy.time import Ticktock
 from datetime import datetime, timedelta
 import pandas as pd
@@ -23,7 +24,7 @@ diff = []			#change in by between consecutive readings in supermag data
 t0 = 0				#the point at which the current sheet arrives at the Earth
 
 #locates all txt files and compiles them into a list
-files = glob('/home/richard/Desktop/research/precursorDB/data/supermag/*.txt')   
+files = glob('precursorDB/data/supermag/*.txt')   
 
 #list files
 for i, f in enumerate(files):
@@ -39,7 +40,7 @@ mags = supermag.SuperMag(files[iFile])
 mags.keys()
 
 #open events excel sheet
-data = pd.read_excel('/home/richard/Desktop/research/precursorDB/docs/SSC_events.xlsx')
+data = pd.read_excel('precursorDB/docs/SSC_events.xlsx')
 
 #compile a list of stations which were active at the time of the event chosen above
 stations = list(mags.keys())[1:]
@@ -91,14 +92,14 @@ onset = t_CS + delta_t					#corrected current sheet arrival time
 t0 = [i for i, time in enumerate(mags['time']) if mags['time'][i] == onset]	#time used for plotting
 
 #generate timeseries
-timeseries = gmp_timeseries(IMFdz, IMFuz, IMFdy, IMFuy, Vsw , r0 = 100, w_csheet=16)
+timeseries = gmp_timeseries([0, IMFdy, IMFdz], [0, IMFuy, IMFuz], [-Vsw,0,0], r0 = 100, w_csheet=16)
 
 #determine the integrator start time
-integrator_time  = timedelta(seconds = (len(timeseries[:,0]) - 1) * 60)
+integrator_time  = timedelta(seconds = (len(timeseries[1][:,0]) - 1) * 60)
 start_time = onset - integrator_time
 
 #turn the By and Bz values from the timeseries into a spacepy Coords object
-bx = np.zeros(len(timeseries[:,0]))
+bx = np.zeros(len(timeseries[1][:,0]))
 
 i = 0		#counter variable
 GSMarray = []	#components of the B vector in GSM coordinates
@@ -106,7 +107,7 @@ timelist = []	#list of datetime objects
 location = []#location of magnetometer
 
 #make a location list as long as timelist
-while i < len(timeseries[:,0]):
+while i < len(timeseries[1][:,0]):
 	location.append([1.0, mags[str(stations[iStation])]['geolat'], mags[str(stations[iStation])]['geolon']])
 	i +=1
 
@@ -114,7 +115,7 @@ i = 0		#reset counter variable
 
 #record the components of the B vector and generate the timelist
 while i < len(bx):
-	GSMarray.append([bx[i], timeseries[:,1][i], timeseries[:,2][i]])
+	GSMarray.append([bx[i], timeseries[1][:,1][i], timeseries[1][:,2][i]])
 	timelist.append(start_time + i * timedelta(seconds = 60))
 	i += 1
 
@@ -125,7 +126,7 @@ GSM = Coords(GSMarray, 'GSM', 'car')
 #turn the timelist into a spacepy Ticktock object
 #record the components of the B vector and generate the timelist
 while i < len(bx):
-	GSMarray.append([bx[i], timeseries[:,1][i], timeseries[:,2][i]])
+	GSMarray.append([bx[i], timeseries[1][:,1][i], timeseries[1][:,2][i]])
 	timelist.append(start_time + i * timedelta(seconds = 60))
 	i += 1
 
@@ -201,7 +202,7 @@ for j, h in enumerate(diff):
 
 #set the integrator and supermag plots so that t = 0 occurs at the point where the current sheet arrives at the Earth
 offset_x = [t0[0]] * 900
-offset_x2 = [len(timeseries)] * 900
+offset_x2 = [len(timeseries[1])] * 900
 
 #find average by and bz at time of event
 i = 60	#repurpose counter variable
@@ -251,6 +252,7 @@ plt.title('E')
 plt.ylabel(r'$B \ (nT)$')
 plt.xlabel('time (minutes)')
 
+style()
 plt.subplot(1, 3, 3)
 integrator_result2, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(bz2_array, offset_z)])
 magdata, = plt.plot([x-y for x,y in zip(seconds, offset_x)], bz_array)

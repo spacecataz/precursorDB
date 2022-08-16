@@ -172,7 +172,7 @@ def biot_savart(R, ky, kz, width=128, dX=0.1):
     kern_y, kern_z = gen_kernel(R, ky, kz)
 
     # Integrate to solve for by, bz.  Units: Amps
-    by = 0
+    by = midpointYZ(kern_y, -halfw, halfw, nx, -halfw, halfw, nx)
     bz = midpointYZ(kern_z, -halfw, halfw, nx, -halfw, halfw, nx)
 
     # Convert to nanotesla from Amps.  4piE-7/4pi = 1E-7 => 1E-7 * 1E9 = 1E2
@@ -242,7 +242,7 @@ class eGSM(IntEnum):
     z = 2
 
 
-def gmp_timeseries(IMFd, IMFu, Vsw, dT=60, r0=100, w_csheet=128, dI=1.0):
+def gmp_timeseries(IMFd, IMFu, Vsw, dT=60, r0=100, w_csheet=256, dI=1.0):
     """
     Solve for time series of ground magnetic perturbation due to current sheet.
 

@@ -16,7 +16,7 @@ import supermag
 from glob import glob
 
 #locates all txt files and compiles them into a list
-files = glob('/home/richard/Desktop/github/precursorDB/data/supermag/*.txt')  
+files = glob('precursorDB/data/supermag/*.txt')  
 
 #lists files
 for i, f in enumerate(files):

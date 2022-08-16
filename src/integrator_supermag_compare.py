@@ -5,17 +5,19 @@ from csheet_integrator import gmp_timeseries
 import supermag
 from glob import glob
 import pandas as pd
+from spacepy.plot import style
 
 #lists and arrays necessary for the script to function
 bz_array = np.zeros(900)	#list of bz values form supermag data
-bz2_array = np.zeros(900)	#list of bz values from integrator
+bz2_array = np.empty(900)	#list of bz values from integrator
+bz2_array[:] = np.NaN
 seconds = list(range(900))	#list of MINUTES (mislabeled variable) 
 bz_near_event = []		#hour of activity leading up to the event
 diff = []			#change in bz between consecutive readings in supermag data
 t0 = 0				#the point at which the current sheet arrives at the Earth
 
 #compile a list of all the supermag data files
-files = glob('../data/supermag/*.txt')
+files = glob('precursorDB/data/supermag/*.txt')
 
 #print the supermag data files
 for i, f in enumerate(files):
@@ -41,7 +43,7 @@ iStation
 stations[iStation]
 
 #open events excel sheet
-data = pd.read_excel('../docs/SSC_events.xlsx', engine='openpyxl')
+data = pd.read_excel('precursorDB/docs/SSC_events.xlsx', engine='openpyxl')
 #retrieve satellite information from excel sheet for use in integrator
 IMF_d = float(data['Bz,init (nT)'][iFile])
 IMF_u = float(data['Bz,final (nT)'][iFile]) 
@@ -50,13 +52,9 @@ V_sw = float(data['Usw (km/s)'][iFile])
 #run integrator
 timeseries = gmp_timeseries([0, 0, IMF_d], [0, 0, IMF_u], [-V_sw, 0, 0])
 
-i = 0	#counter variable
-
 #compile integrator results at 60 second resolution into array of standard length (900 items) for plotting
 for num, item in enumerate(timeseries[1][:,2]):
-	if timeseries[1][num][0] % 60 == 0:
-		bz2_array[i] = timeseries[1][num][2]
-		i += 1
+	bz2_array[num] = item
 		
 j = 0	#counter variable
 
@@ -91,6 +89,7 @@ bz_avg = np.average(bz_near_event)
 offset_y = [bz_avg] * 900
 
 #plot supermag data vs integrator results
+style()
 integrator_result, = plt.plot([x-y for x,y in zip(seconds, offset_x2)], [x+y for x,y in zip(bz2_array, offset_y)])
 mhd_result, = plt.plot([x-y for x,y in zip(seconds, offset_x)], bz_array)
 plt.legend(handles = [integrator_result, mhd_result], labels = ['Biot Savart Integrator Result','SuperMAG Data'])

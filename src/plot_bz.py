@@ -2,10 +2,11 @@
 import matplotlib.pyplot as plt
 import supermag
 from glob import glob
-#import timeseries, bz
+import matplotlib.dates as mdates
+from spacepy.plot import style
 
 #locates all txt files and compiles them into a list
-files = glob('/home/richard/Desktop/github/precursorDB/data/supermag/*.txt')   
+files = glob('precursorDB/data/supermag/*.txt')   
 
 #list files
 for i, f in enumerate(files):
@@ -34,7 +35,12 @@ stations[iStation]
 offset = int
 
 #returns plot of data 
+style()
 plt.ion()
-plt.plot(mags['time'], mags[stations[iStation]]['bx'])
-#plt.plot(timeseries - offset, bz)
+Bz = plt.plot(mags['time'], mags[stations[iStation]]['bx'])
+plt.style.use('bmh')
+plt.title(r'$B_z$'+' from '+str(stations[iStation])+' during the '+str(mags['time'][200].year)+'/'+str(mags['time'][200].month)+'/'+str(mags['time'][200].day)+' Event')
+plt.ylabel(r'$B_z \ (nT)$')
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+plt.xlabel('UT')
 
